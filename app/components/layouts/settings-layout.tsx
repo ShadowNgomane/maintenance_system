@@ -38,7 +38,6 @@ const navigation: NavSection[] = [
     title: "Organization",
     items: [
       { title: "General", icon: <Home className="h-4 w-4" />, href: "/settings/general" },
-      { title: "Automation", icon: <Settings className="h-4 w-4" />, href: "/settings/automation" },
       { title: "User Roles", icon: <Users className="h-4 w-4" />, href: "/settings/user-roles" },
     ],
   },
