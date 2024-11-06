@@ -1,7 +1,9 @@
-export default function PurchaseOrders() {
+import PurchaseOrders from "../components/purchase-orders"
+
+export default function PurchaseOrderPage() {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Purchase Orders</h1>
-    </div>
+    <> 
+    <PurchaseOrders /> 
+    </>
   )
 }
