@@ -1,4 +1,4 @@
-import WorkOrdersTable from "../components/layouts/work-orders-table"
+import WorkOrdersTable from "../components/work-orders-table"
 
 export default function Home() {
     const workOrders = [
