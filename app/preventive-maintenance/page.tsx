@@ -1,7 +1,9 @@
-export default function PreventiveMaintenance() {
+import PreventiveMaintenance from "../components/preventive-maintenance"
+
+export default function PreventiveMaintenancePage() {
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold">Preventive Maintenance</h1>
-    </div>
+    <>
+      <PreventiveMaintenance />
+    </>
   )
 }
