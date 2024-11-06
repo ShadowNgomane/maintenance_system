@@ -17,7 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { ChevronDown, Copy, MoreHorizontal, Search } from "lucide-react"
 
-export default function PurchaseOrders() {
+export default function Component() {
   return (
     <div className="w-full">
       <div className="border-b">

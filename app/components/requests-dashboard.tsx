@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table"
 import { ChevronDown, Image as ImageIcon, MoreHorizontal, Search } from "lucide-react"
 
-export default function Component() {
+export default function RequestDashboard() {
   return (
     <div className="w-full">
       <div className="border-b">
