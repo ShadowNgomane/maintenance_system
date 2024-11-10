@@ -6,150 +6,185 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { ChevronDown, Copy, MoreHorizontal, Search } from "lucide-react"
+import { ChevronDown, Copy, MoreHorizontal, Search, FilterIcon } from "lucide-react"
+import { Table } from 'antd'
+import type { TableProps } from 'antd'
+import { useEffect, useState } from "react"
+import { purchaseOrderService } from "@/app/services/purchaseOrderService"
+import { useToast } from "@/hooks/use-toast"
+import { PurchaseOrder } from "@/app/types/purchaseOrder"
+
+
 
 export default function Component() {
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedRows, setSelectedRows] = useState<string[]>([])
+  const { toast } = useToast()
+
+  const columns = [
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+    },
+    {
+      title: 'PO Number',
+      dataIndex: 'poNumber',
+      key: 'poNumber',
+    },
+    {
+      title: '# of Items',
+      dataIndex: 'itemsCount',
+      key: 'itemsCount',
+    },
+    {
+      title: 'Total Quantity',
+      dataIndex: 'totalQuantity',
+      key: 'totalQuantity',
+    },
+    {
+      title: 'Total Cost',
+      dataIndex: 'totalCost',
+      key: 'totalCost',
+    },
+    {
+      title: 'Created By',
+      dataIndex: 'createdBy',
+      key: 'createdBy',
+    },
+    {
+      title: 'Vendor',
+      dataIndex: 'vendor',
+      key: 'vendor',
+    },
+    {
+      title: 'Tags',
+      dataIndex: 'tags',
+      key: 'tags',
+      render: (tags: string[]) => (
+        <>
+          {tags.map(tag => (
+            <Badge key={tag} variant="secondary">{tag}</Badge>
+          ))}
+        </>
+      ),
+    },
+  ]
+
+  const fetchPurchaseOrders = async () => {
+    try {
+      setLoading(true)
+      const data = await purchaseOrderService.getAll()
+      setPurchaseOrders(data)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch purchase orders",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPurchaseOrders()
+  }, [])
+
+  const handleDeletePurchaseOrders = async () => {
+    try {
+      await Promise.all(selectedRows.map(id => purchaseOrderService.delete(id)))
+      setSelectedRows([])
+      fetchPurchaseOrders()
+      toast({
+        title: "Success",
+        description: "Purchase orders deleted successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete purchase orders",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const tableSection = (
+    <Table
+      rowSelection={{
+        selectedRowKeys: selectedRows,
+        onChange: (selectedRowKeys) => {
+          setSelectedRows(selectedRowKeys as string[])
+        },
+      }}
+      columns={columns}
+      dataSource={purchaseOrders}
+      rowKey="id"
+      loading={loading}
+    />
+  )
+
   return (
-    <div className="w-full">
-      <div className="border-b">
-        <div className="flex h-16 items-center px-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <div className="h-4 w-4 border" />
-            </Button>
-            <h1 className="text-xl font-semibold">Purchase Orders</h1>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <Button>Create Purchase Order</Button>
-            <Button variant="ghost" size="icon">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </div>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between border-b bg-white px-4 py-2">
+        <div className="flex items-center gap-4">
+          <h1 className="text-lg font-semibold">Purchase Orders</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+            Create Purchase Order
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                Import/Export
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                Export Filtered View
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                Export to PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-      <div className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted-foreground">1 of 1 item</div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm">
-              Sort: Date Created
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              Columns
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-8" placeholder="Search" />
-            </div>
-          </div>
+
+      <div className="flex items-center gap-2 px-4">
+        <Button variant="outline" size="sm" className="gap-2">
+          <FilterIcon className="h-4 w-4" />
+          Filters
+        </Button>
+        <Button variant="outline" size="sm" className="gap-2">
+          Status
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+          <Input className="w-64 pl-8" placeholder="Search" />
         </div>
-        <div className="mt-4 flex gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                Filters
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>Show all</DropdownMenuItem>
-              <DropdownMenuItem>Active</DropdownMenuItem>
-              <DropdownMenuItem>Completed</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                Tags
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>All tags</DropdownMenuItem>
-              <DropdownMenuItem>Restock</DropdownMenuItem>
-              <DropdownMenuItem>Maintenance</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                Status
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem>All statuses</DropdownMenuItem>
-              <DropdownMenuItem>Pending</DropdownMenuItem>
-              <DropdownMenuItem>Completed</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button variant="link" size="sm" className="ml-auto">
-            Save View
+      </div>
+
+      {selectedRows.length > 0 && (
+        <div className="px-4">
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={handleDeletePurchaseOrders}
+          >
+            Delete Selected ({selectedRows.length})
           </Button>
         </div>
-        <div className="mt-4 rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <div className="h-4 w-4 border" />
-                  </Button>
-                </TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>PO Number</TableHead>
-                <TableHead># of Items</TableHead>
-                <TableHead>Total Quantity</TableHead>
-                <TableHead>Total Cost</TableHead>
-                <TableHead>Created By</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Tags</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow>
-                <TableCell>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                    <div className="h-4 w-4 border" />
-                  </Button>
-                </TableCell>
-                <TableCell>Restock: HVAC Filters</TableCell>
-                <TableCell className="font-mono">
-                  1
-                  <Button variant="ghost" size="icon" className="ml-2 h-6 w-6">
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </TableCell>
-                <TableCell>1</TableCell>
-                <TableCell>12</TableCell>
-                <TableCell>$74.43</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-                      <span className="text-sm">S</span>
-                    </div>
-                    <span>Shadow Ngomane</span>
-                  </div>
-                </TableCell>
-                <TableCell>McMaster-Carr</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">Restock</Badge>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+      )}
+
+      {tableSection}
     </div>
   )
 }

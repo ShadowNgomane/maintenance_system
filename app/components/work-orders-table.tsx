@@ -24,14 +24,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -40,6 +32,11 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useEffect, useState } from "react"
+import { workOrderService } from "@/app/services/workOrderService"
+import { useToast } from "@/hooks/use-toast"
+import { Table } from 'antd'
+import type { TableProps } from 'antd'
 
 interface WorkOrder {
   id: string
@@ -55,20 +52,283 @@ interface WorkOrder {
 }
 
 interface WorkOrdersTableProps {
-  workOrders: WorkOrder[]
-  onCreateWorkOrder?: () => void
   onFilterChange?: (filters: any) => void
   onSortChange?: (column: string, direction: "asc" | "desc") => void
 }
 
 export default function Component({ 
-  workOrders,
-  onCreateWorkOrder,
   onFilterChange,
   onSortChange 
-}: WorkOrdersTableProps) {
+}: Omit<WorkOrdersTableProps, 'workOrders'>) {
+  const [workOrders, setWorkOrders] = useState<WorkOrder[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedRows, setSelectedRows] = React.useState<string[]>([])
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false)
+  const [formData, setFormData] = useState<Partial<WorkOrder>>({
+    title: '',
+    description: '',
+    status: 'Open',
+    priority: 'Medium',
+    category: '',
+  })
+  const { toast } = useToast()
+
+  // Define columns for Ant Design Table
+  const columns = [
+    {
+      title: 'WO #',
+      dataIndex: 'id',
+      key: 'id',
+      render: (id: string, record: WorkOrder) => (
+        <div className="flex items-center gap-1">
+          {id}
+          {record.hasInfo && (
+            <Badge variant="secondary" className="bg-pink-100">
+              <Info className="h-3 w-3 text-pink-500" />
+            </Badge>
+          )}
+          {record.hasRecurring && (
+            <Badge variant="secondary" className="bg-emerald-100">
+              <RefreshCcw className="h-3 w-3 text-emerald-500" />
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: 'Work Order Title',
+      dataIndex: 'title',
+      key: 'title',
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Due Date',
+      dataIndex: 'dueDate',
+      key: 'dueDate',
+    },
+    {
+      title: 'Start Date',
+      dataIndex: 'startDate',
+      key: 'startDate',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: string) => (
+        <div className="flex items-center gap-1">
+          <CheckCircle2 className="h-4 w-4 text-zinc-300" />
+          {status}
+        </div>
+      ),
+    },
+    {
+      title: 'Priority',
+      dataIndex: 'priority',
+      key: 'priority',
+      render: (priority: string) => (
+        <Badge
+          variant="secondary"
+          className={
+            priority === "Low"
+              ? "bg-blue-100 text-blue-600"
+              : priority === "Medium"
+              ? "bg-orange-100 text-orange-600"
+              : "bg-red-100 text-red-600"
+          }
+        >
+          {priority}
+        </Badge>
+      ),
+    },
+    {
+      title: 'Category',
+      dataIndex: 'category',
+      key: 'category',
+      align: 'right' as const,
+    },
+  ]
+
+  // Fetch work orders
+  const fetchWorkOrders = async () => {
+    try {
+      setLoading(true)
+      const data = await workOrderService.getAll()
+      setWorkOrders(data)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch work orders",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchWorkOrders()
+  }, [])
+
+  // Handle form input changes
+  const handleInputChange = (field: keyof WorkOrder, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  // Handle create work order
+  const handleCreateWorkOrder = async () => {
+    try {
+      await workOrderService.create(formData)
+      setIsCreateModalOpen(false)
+      setFormData({}) // Reset form
+      fetchWorkOrders() // Refresh the list
+      toast({
+        title: "Success",
+        description: "Work order created successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create work order",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Handle delete work order(s)
+  const handleDeleteWorkOrders = async () => {
+    try {
+      await Promise.all(selectedRows.map(id => workOrderService.delete(id)))
+      setSelectedRows([])
+      fetchWorkOrders()
+      toast({
+        title: "Success",
+        description: "Work orders deleted successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete work orders",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Update the create modal content
+  const createModalContent = (
+    <DialogContent className="sm:max-w-[650px]">
+      <DialogHeader>
+        <DialogTitle>Create Work Order</DialogTitle>
+      </DialogHeader>
+      <div className="grid gap-4 py-4">
+        <div className="grid gap-2">
+          <Label htmlFor="title">Title</Label>
+          <Input 
+            id="title" 
+            value={formData.title || ''} 
+            onChange={(e) => handleInputChange('title', e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="description">Description</Label>
+          <Input 
+            id="description" 
+            value={formData.description || ''} 
+            onChange={(e) => handleInputChange('description', e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="dueDate">Due Date</Label>
+          <Input 
+            id="dueDate" 
+            type="date" 
+            value={formData.dueDate || ''} 
+            onChange={(e) => handleInputChange('dueDate', e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="startDate">Start Date</Label>
+          <Input 
+            id="startDate" 
+            type="date" 
+            value={formData.startDate || ''} 
+            onChange={(e) => handleInputChange('startDate', e.target.value)}
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="status">Status</Label>
+          <Select 
+            value={formData.status} 
+            onValueChange={(value) => handleInputChange('status', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Open">Open</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="priority">Priority</Label>
+          <Select 
+            value={formData.priority} 
+            onValueChange={(value) => handleInputChange('priority', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select priority" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Low">Low</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="High">High</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="category">Category</Label>
+          <Input 
+            id="category" 
+            value={formData.category || ''} 
+            onChange={(e) => handleInputChange('category', e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+          Cancel
+        </Button>
+        <Button onClick={handleCreateWorkOrder}>
+          Create
+        </Button>
+      </div>
+    </DialogContent>
+  )
+
+  // Replace the existing table with the new tableSection
+  const tableSection = (
+    <Table
+      rowSelection={{
+        selectedRowKeys: selectedRows,
+        onChange: (selectedRowKeys) => {
+          setSelectedRows(selectedRowKeys as string[])
+        },
+      }}
+      columns={columns}
+      dataSource={workOrders}
+      rowKey="id"
+      loading={loading}
+    />
+  )
 
   return (
     <div className="flex flex-col gap-4">
@@ -78,20 +338,6 @@ export default function Component({
           <h1 className="text-lg font-semibold">Work Orders</h1>
         </div>
         <div className="flex items-center gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <LayoutGrid className="mr-2 h-4 w-4" />
-                Table
-                <ChevronDown className="ml-2 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>Table View</DropdownMenuItem>
-              <DropdownMenuItem>Calendar View</DropdownMenuItem>
-              <DropdownMenuItem>Kanban View</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
@@ -99,71 +345,7 @@ export default function Component({
                 Create Work Order
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[650px]">
-              <DialogHeader>
-                <DialogTitle>Create Work Order</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Input id="description" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="dueDate">Due Date</Label>
-                  <Input id="dueDate" type="date" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="startDate">Start Date</Label>
-                  <Input id="startDate" type="date" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Open">Open</SelectItem>
-                      <SelectItem value="In Progress">In Progress</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="priority">Priority</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Low">Low</SelectItem>
-                      <SelectItem value="Medium">Medium</SelectItem>
-                      <SelectItem value="High">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Input id="category" />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={() => {
-                  // Handle form submission here
-                  onCreateWorkOrder?.()
-                  setIsCreateModalOpen(false)
-                }}>
-                  Create
-                </Button>
-              </div>
-            </DialogContent>
+            {createModalContent}
           </Dialog>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -212,12 +394,6 @@ export default function Component({
           Assigned To
           <ChevronDown className="h-4 w-4" />
         </Button>
-        <Button variant="link" size="sm" className="ml-auto">
-          Reset
-        </Button>
-        <Button variant="link" size="sm" className="text-blue-600">
-          Save View
-        </Button>
       </div>
 
       {/* Table Controls */}
@@ -239,96 +415,21 @@ export default function Component({
         </div>
       </div>
 
+      {/* Add delete button when rows are selected */}
+      {selectedRows.length > 0 && (
+        <div className="px-4">
+          <Button 
+            variant="destructive" 
+            size="sm"
+            onClick={handleDeleteWorkOrders}
+          >
+            Delete Selected ({selectedRows.length})
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectedRows.length === workOrders.length}
-                  onCheckedChange={(checked) => {
-                    if (checked) {
-                      setSelectedRows(workOrders.map(wo => wo.id))
-                    } else {
-                      setSelectedRows([])
-                    }
-                  }}
-                />
-              </TableHead>
-              <TableHead>WO #</TableHead>
-              <TableHead>Work Order Title</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead className="text-right">
-                Category
-                <ArrowUpDown className="ml-2 h-4 w-4" />
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {workOrders.map((workOrder) => (
-              <TableRow key={workOrder.id}>
-                <TableCell>
-                  <Checkbox
-                    checked={selectedRows.includes(workOrder.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedRows([...selectedRows, workOrder.id])
-                      } else {
-                        setSelectedRows(selectedRows.filter(id => id !== workOrder.id))
-                      }
-                    }}
-                  />
-                </TableCell>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-1">
-                    {workOrder.id}
-                    {workOrder.hasInfo && (
-                      <Badge variant="secondary" className="bg-pink-100">
-                        <Info className="h-3 w-3 text-pink-500" />
-                      </Badge>
-                    )}
-                    {workOrder.hasRecurring && (
-                      <Badge variant="secondary" className="bg-emerald-100">
-                        <RefreshCcw className="h-3 w-3 text-emerald-500" />
-                      </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>{workOrder.title}</TableCell>
-                <TableCell>{workOrder.description}</TableCell>
-                <TableCell>{workOrder.dueDate}</TableCell>
-                <TableCell>{workOrder.startDate}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <CheckCircle2 className="h-4 w-4 text-zinc-300" />
-                    {workOrder.status}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant="secondary"
-                    className={
-                      workOrder.priority === "Low"
-                        ? "bg-blue-100 text-blue-600"
-                        : workOrder.priority === "Medium"
-                        ? "bg-orange-100 text-orange-600"
-                        : "bg-red-100 text-red-600"
-                    }
-                  >
-                    {workOrder.priority}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">{workOrder.category}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      {tableSection}
     </div>
   )
 }

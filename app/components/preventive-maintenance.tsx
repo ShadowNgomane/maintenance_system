@@ -88,7 +88,7 @@ export default function Component() {
   ])
 
   return (
-    <div className="w-full">
+    <div className="w-full h-screen flex flex-col">
       <div className="border-b">
         <div className="flex h-16 items-center px-4">
           <div className="flex items-center gap-4">
@@ -180,9 +180,9 @@ export default function Component() {
         </Button>
       </div>
 
-      <div className="px-4">
-        <div className="overflow-x-auto relative max-w-[calc(100vw-2rem)]">
-          <div className="overflow-x-scroll">
+      <div className="flex-1 px-4 overflow-hidden">
+        <div className="h-full relative">
+          <div className="overflow-x-auto overflow-y-auto h-full">
             <Table>
               <TableHeader>
                 <TableRow>
