@@ -12,6 +12,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch Preventive Maintenance items' }, { status: 500 });
     }
   }
+
+  
   
   // POST - Create new Preventive Maintenance item
   export async function POST(request: Request) {

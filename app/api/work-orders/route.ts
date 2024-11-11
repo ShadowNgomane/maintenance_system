@@ -18,7 +18,15 @@ export async function POST(request: Request) {
   try {
     await dbConnect();
     const data = await request.json();
-    const workOrder = await WorkOrder.create(data);
+
+    // Find the last work order to get the highest workOrderNumber
+    const lastWorkOrder = await WorkOrder.findOne().sort({ workOrderNumber: -1 });
+    const newWorkOrderNumber = lastWorkOrder ? lastWorkOrder.workOrderNumber + 1 : 1;
+
+    // Include the new workOrderNumber in the data
+    const workOrderData = { ...data, workOrderNumber: newWorkOrderNumber };
+
+    const workOrder = await WorkOrder.create(workOrderData);
     return NextResponse.json(workOrder, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create work order' }, { status: 500 });
