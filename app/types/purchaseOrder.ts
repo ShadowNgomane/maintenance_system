@@ -4,8 +4,9 @@ export interface PurchaseOrder {
     poNumber: string
     itemsCount: number
     totalQuantity: number
-    totalCost: string
+    totalCost: number
     createdBy: string
     vendor: string
     tags: string[]
+    status: string
   }

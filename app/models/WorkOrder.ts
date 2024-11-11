@@ -18,6 +18,7 @@ const workOrderSchema = new Schema({
   category: { type: String, required: true },
   hasInfo: { type: Boolean, default: false },
   hasRecurring: { type: Boolean, default: false },
+  workOrderNumber: { type: Number, unique: true, required: true }
 }, {
   timestamps: true
 });

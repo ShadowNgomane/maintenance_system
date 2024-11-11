@@ -325,7 +325,7 @@ export default function Component({
       }}
       columns={columns}
       dataSource={workOrders}
-      rowKey="id"
+      rowKey="_id"
       loading={loading}
     />
   )
