@@ -202,38 +202,24 @@ export default function Component() {
     }
   }
 
-  // Create modal content
   const createModalContent = (
-    <DialogContent className="sm:max-w-[650px]">
+    <DialogContent className="sm:max-w-[800px]">
       <DialogHeader>
         <DialogTitle>Create Preventive Maintenance</DialogTitle>
       </DialogHeader>
-      <div className="grid gap-4 py-4">
-        <div className="grid gap-2">
-          <Label htmlFor="name">Name</Label>
-          <Input 
-            id="name" 
-            value={formData.name || ''} 
-            onChange={(e) => handleInputChange('name', e.target.value)}
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="workOrderTitle">Work Order Title</Label>
-          <Input 
-            id="workOrderTitle" 
-            value={formData.workOrderTitle || ''} 
-            onChange={(e) => handleInputChange('workOrderTitle', e.target.value)}
-          />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="workOrderDescription">Work Order Description</Label>
-          <Input 
-            id="workOrderDescription" 
-            value={formData.workOrderDescription || ''} 
-            onChange={(e) => handleInputChange('workOrderDescription', e.target.value)}
-          />
-        </div>
-        <div className="grid gap-2">
+      {/* Scrollable Content Wrapper */}
+      <div className="max-h-[70vh] overflow-y-auto grid gap-4 py-4">
+        {/* Two-Column Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Name</Label>
+            <Input 
+              id="name" 
+              value={formData.name || ''} 
+              onChange={(e) => handleInputChange('name', e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
           <Label htmlFor="category">Category</Label>
           <Input 
             id="category" 
@@ -241,24 +227,124 @@ export default function Component() {
             onChange={(e) => handleInputChange('category', e.target.value)}
           />
         </div>
-        <div className="grid gap-2">
-          <Label htmlFor="priority">Priority</Label>
-          <Select 
-            value={formData.priority} 
-            onValueChange={(value) => handleInputChange('priority', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select priority" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Low">Low</SelectItem>
-              <SelectItem value="Medium">Medium</SelectItem>
-              <SelectItem value="High">High</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid gap-2">
+            <Label htmlFor="workOrderTitle">Work Order Title</Label>
+            <Input 
+              id="workOrderTitle" 
+              value={formData.workOrderTitle || ''} 
+              onChange={(e) => handleInputChange('workOrderTitle', e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="workOrderDescription">Work Order Description</Label>
+            <Input 
+              id="workOrderDescription" 
+              value={formData.workOrderDescription || ''} 
+              onChange={(e) => handleInputChange('workOrderDescription', e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="image">Image URL</Label>
+            <Input 
+              id="image" 
+              value={formData.image || ''} 
+              onChange={(e) => handleInputChange('image', e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="schedules">Schedules</Label>
+            <Input 
+              id="schedules" 
+              type="number"
+              value={formData.schedules || ''} 
+              onChange={(e) => handleInputChange('schedules', parseInt(e.target.value))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="asset">Asset</Label>
+            <Input 
+              id="asset" 
+              value={formData.asset || ''} 
+              onChange={(e) => handleInputChange('asset', e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="assignedTo">Assigned To (Name)</Label>
+            <Input 
+              id="assignedToName" 
+              value={formData.assignedTo?.name || ''} 
+              onChange={(e) => handleInputChange('assignedTo', { ...formData.assignedTo, name: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="assignedToAvatar">Assigned To (Avatar URL)</Label>
+            <Input 
+              id="assignedToAvatar" 
+              value={formData.assignedTo?.avatar || ''} 
+              onChange={(e) => handleInputChange('assignedTo', { ...formData.assignedTo, avatar: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="additionalWorkers">Additional Workers (Comma-separated)</Label>
+            <Input 
+              id="additionalWorkers" 
+              value={formData.additionalWorkers?.join(', ') || ''} 
+              onChange={(e) => handleInputChange('additionalWorkers', e.target.value.split(',').map(worker => worker.trim()))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="team">Team</Label>
+            <Input 
+              id="team" 
+              value={formData.team || ''} 
+              onChange={(e) => handleInputChange('team', e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="location">Location</Label>
+            <Input 
+              id="location" 
+              value={formData.location || ''} 
+              onChange={(e) => handleInputChange('location', e.target.value)}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="checklist">Checklist (Comma-separated)</Label>
+            <Input 
+              id="checklist" 
+              value={formData.checklist?.join(', ') || ''} 
+              onChange={(e) => handleInputChange('checklist', e.target.value.split(',').map(item => item.trim()))}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="dateCreated">Date Created</Label>
+            <Input 
+              id="dateCreated" 
+              type="date" 
+              value={formData.dateCreated || ''} 
+              onChange={(e) => handleInputChange('dateCreated', e.target.value)}
+            />
+          </div>
+          {/* Priority Select */}
+          <div className="grid gap-2">
+            <Label htmlFor="priority">Priority</Label>
+            <Select 
+              value={formData.priority} 
+              onValueChange={(value) => handleInputChange('priority', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Low">Low</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="High">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 mt-4">
         <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
           Cancel
         </Button>
@@ -268,6 +354,7 @@ export default function Component() {
       </div>
     </DialogContent>
   )
+  
 
   return (
     <div className="w-full h-screen flex flex-col">

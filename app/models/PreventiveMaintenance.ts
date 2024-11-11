@@ -12,7 +12,7 @@ const MaintenanceItemSchema: Schema = new Schema({
   asset: { type: String, required: true },
   assignedTo: {
     name: { type: String, required: true },
-    avatar: { type: String, required: true },
+    avatar: { type: String, required: false },
   },
   additionalWorkers: { type: [String], required: true },
   team: { type: String, required: true },
